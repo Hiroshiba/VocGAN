@@ -1,11 +1,14 @@
 import torch
 import torch.nn as nn
+
+from model.discriminator import Discriminator, JCU_Discriminator
 from utils.utils import weights_init
-from model.discriminator import JCU_Discriminator, Discriminator
 
 
 class MultiScaleDiscriminator(nn.Module):
-    def __init__(self, num_D = 3, ndf = 16, n_layers = 3, downsampling_factor = 4, disc_out = 512):
+    def __init__(
+        self, num_D=3, ndf=16, n_layers=3, downsampling_factor=4, disc_out=512
+    ):
         super().__init__()
         self.model = nn.ModuleDict()
         for i in range(num_D):
@@ -13,7 +16,9 @@ class MultiScaleDiscriminator(nn.Module):
                 ndf, n_layers, downsampling_factor, disc_out
             )
 
-        self.downsample = nn.AvgPool1d(downsampling_factor, stride=2, padding=1, count_include_pad=False)
+        self.downsample = nn.AvgPool1d(
+            downsampling_factor, stride=2, padding=1, count_include_pad=False
+        )
         self.apply(weights_init)
 
     def forward(self, x):
@@ -24,27 +29,29 @@ class MultiScaleDiscriminator(nn.Module):
         return results
 
 
-
 class MultiScaleDiscriminatorJCU(nn.Module):
-    def __init__(self, num_D = 3, downsampling_factor = 4):
+    def __init__(self, num_D=3, downsampling_factor=4):
         super(MultiScaleDiscriminator, self).__init__()
         self.model = nn.ModuleDict()
         for i in range(num_D):
             self.model[f"disc_{i}"] = JCU_Discriminator()
 
-        self.downsample = nn.AvgPool1d(downsampling_factor, stride=2, padding=1, count_include_pad=False)
-
+        self.downsample = nn.AvgPool1d(
+            downsampling_factor, stride=2, padding=1, count_include_pad=False
+        )
 
     def forward(self, x, mel):
         results = []
         for key, disc in self.model.items():
-            results.append(disc(x, mel)) # [[uncond, cond], [uncond, cond], [uncond, cond]]
+            results.append(
+                disc(x, mel)
+            )  # [[uncond, cond], [uncond, cond], [uncond, cond]]
             x = self.downsample(x)
             mel = self.downsample(mel)
-        return results # [D01, D02, D03]
+        return results  # [D01, D02, D03]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     model = MultiScaleDiscriminator()
 
     x = torch.randn(3, 1, 22050)

@@ -1,5 +1,6 @@
 import random
 import subprocess
+
 import numpy as np
 from scipy.io.wavfile import read
 
@@ -12,9 +13,11 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
 
+
 def get_commit_hash():
     message = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-    return message.strip().decode('utf-8')
+    return message.strip().decode("utf-8")
+
 
 def read_wav_np(path):
     sr, wav = read(path)

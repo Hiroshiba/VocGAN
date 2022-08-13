@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 is_torchver_higher18 = float(torch.__version__[:3]) >= 1.8
 
+
 def stft(x, fft_size, hop_size, win_length, window):
     """Perform STFT and convert to magnitude spectrogram.
     Args:
@@ -21,8 +22,12 @@ def stft(x, fft_size, hop_size, win_length, window):
     Returns:
         Tensor: Magnitude spectrogram (B, #frames, fft_size // 2 + 1).
     """
-    if is_torchver_higher18: ## For future pytorch release (1.8<=), they strongly prefer to use return_complex=True
-        x_stft = torch.stft(x, fft_size, hop_size, win_length, window, return_complex=True)
+    if (
+        is_torchver_higher18
+    ):  ## For future pytorch release (1.8<=), they strongly prefer to use return_complex=True
+        x_stft = torch.stft(
+            x, fft_size, hop_size, win_length, window, return_complex=True
+        )
         x_stft = torch.view_as_real(x_stft)
     else:
         x_stft = torch.stft(x, fft_size, hop_size, win_length, window)
@@ -30,7 +35,7 @@ def stft(x, fft_size, hop_size, win_length, window):
     imag = x_stft[..., 1]
 
     # NOTE(kan-bayashi): clamp is needed to avoid nan or inf
-    return torch.sqrt(torch.clamp(real ** 2 + imag ** 2, min=1e-7)).transpose(2, 1)
+    return torch.sqrt(torch.clamp(real**2 + imag**2, min=1e-7)).transpose(2, 1)
 
 
 class SpectralConvergengeLoss(torch.nn.Module):
@@ -72,7 +77,9 @@ class LogSTFTMagnitudeLoss(torch.nn.Module):
 class STFTLoss(torch.nn.Module):
     """STFT loss module."""
 
-    def __init__(self, fft_size=1024, shift_size=120, win_length=600, window="hann_window"):
+    def __init__(
+        self, fft_size=1024, shift_size=120, win_length=600, window="hann_window"
+    ):
         """Initialize STFT loss module."""
         super(STFTLoss, self).__init__()
         self.fft_size = fft_size
@@ -91,8 +98,20 @@ class STFTLoss(torch.nn.Module):
             Tensor: Spectral convergence loss value.
             Tensor: Log STFT magnitude loss value.
         """
-        x_mag = stft(x, self.fft_size, self.shift_size, self.win_length, self.window.to(x.get_device()))
-        y_mag = stft(y, self.fft_size, self.shift_size, self.win_length, self.window.to(x.get_device()))
+        x_mag = stft(
+            x,
+            self.fft_size,
+            self.shift_size,
+            self.win_length,
+            self.window.to(x.get_device()),
+        )
+        y_mag = stft(
+            y,
+            self.fft_size,
+            self.shift_size,
+            self.win_length,
+            self.window.to(x.get_device()),
+        )
         sc_loss = self.spectral_convergenge_loss(x_mag, y_mag)
         mag_loss = self.log_stft_magnitude_loss(x_mag, y_mag)
 
@@ -102,11 +121,13 @@ class STFTLoss(torch.nn.Module):
 class MultiResolutionSTFTLoss(torch.nn.Module):
     """Multi resolution STFT loss module."""
 
-    def __init__(self,
-                 fft_sizes=[1024, 2048, 512],
-                 hop_sizes=[120, 240, 50],
-                 win_lengths=[600, 1200, 240],
-                 window="hann_window"):
+    def __init__(
+        self,
+        fft_sizes=[1024, 2048, 512],
+        hop_sizes=[120, 240, 50],
+        win_lengths=[600, 1200, 240],
+        window="hann_window",
+    ):
         """Initialize Multi resolution STFT loss module.
         Args:
             fft_sizes (list): List of FFT sizes.
