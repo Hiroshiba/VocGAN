@@ -8,6 +8,8 @@ from denoiser import Denoiser
 from model.generator import ModifiedGenerator
 from utils.hparams import HParam, load_hparam_str
 
+from .utils.utils import read_mel_np
+
 MAX_WAV_VALUE = 32768.0
 
 
@@ -29,7 +31,7 @@ def main(args):
     model.eval(inference=True)
 
     with torch.no_grad():
-        mel = torch.from_numpy(np.load(args.input))
+        mel = torch.from_numpy(read_mel_np(args.input))
         if len(mel.shape) == 2:
             mel = mel.unsqueeze(0)
         mel = mel.cuda()

@@ -6,9 +6,9 @@ import traceback
 import numpy as np
 import torch
 import tqdm
-
 from model.generator import ModifiedGenerator
 from model.multiscale import MultiScaleDiscriminator
+
 from utils.stft_loss import MultiResolutionSTFTLoss
 
 from .utils import get_commit_hash
@@ -22,7 +22,7 @@ def num_params(model, print_out=True):
         print("Trainable Parameters: %.3fM" % parameters)
 
 
-def train(args, pt_dir, chkpt_path, trainloader, valloader, writer, logger, hp, hp_str):
+def train(args, output_dir, trainloader, valloader, writer, logger, hp, hp_str):
     model_g = ModifiedGenerator(
         hp.audio.n_mel_channels,
         hp.model.n_residual_layers,
@@ -51,7 +51,8 @@ def train(args, pt_dir, chkpt_path, trainloader, valloader, writer, logger, hp, 
     init_epoch = -1
     step = 0
 
-    if chkpt_path is not None:
+    chkpt_path = os.path.join(output_dir, "checkpoint.pt")
+    if os.path.exists(chkpt_path):
         logger.info("Resuming from checkpoint: %s" % chkpt_path)
         checkpoint = torch.load(chkpt_path)
         model_g.load_state_dict(checkpoint["model_g"])
@@ -214,9 +215,7 @@ def train(args, pt_dir, chkpt_path, trainloader, valloader, writer, logger, hp, 
                         )
                     )
             if epoch % hp.log.save_interval == 0:
-                save_path = os.path.join(
-                    pt_dir, "%s_%s_%04d.pt" % (args.name, githash, epoch)
-                )
+                save_path = os.path.join(output_dir, "checkpoint.pt")
                 torch.save(
                     {
                         "model_g": model_g.state_dict(),
@@ -231,6 +230,18 @@ def train(args, pt_dir, chkpt_path, trainloader, valloader, writer, logger, hp, 
                     save_path,
                 )
                 logger.info("Saved checkpoint to: %s" % save_path)
+
+                save_path = os.path.join(output_dir, "generator_%04d.pt" % epoch)
+                torch.save(
+                    {
+                        "model_g": model_g.state_dict(),
+                        "step": step,
+                        "epoch": epoch,
+                        "hp_str": hp_str,
+                    },
+                    save_path,
+                )
+                logger.info("Saved generator to: %s" % save_path)
 
     except Exception as e:
         logger.info("Exiting due to exception: %s" % e)

@@ -1,8 +1,9 @@
 data: # root path of train/validation data (either relative/absoulte path is ok)
-  train: 'H:\Deepsync\backup\deepsync\LJSpeech-1.1\wavs'
-  validation: 'H:\Deepsync\backup\deepsync\LJSpeech-1.1\valid'
-  mel_path: 'H:\Deepsync\backup\fastspeech\data\mels'
-  eval_path: ''
+  train: '/path/to/train.txt'
+  validation: '/path/to/validation.txt'
+  train_mel: '/path/to/train_mel.txt'
+  validation_mel: '/path/to/validation_mel.txt'
+  eval_path: '/path/to/eval_path.txt'
 ---
 train:
   rep_discriminator: 1
@@ -35,26 +36,24 @@ model:
   generator_ratio: [4, 4, 2, 2, 2, 2] # for 256 hop size and 22050 sample rate
   mult: 256
   n_residual_layers: 4
-  num_D : 3
-  ndf : 16
+  num_D: 3
+  ndf: 16
   n_layers: 3
   downsampling_factor: 4
   disc_out: 512
-  
+
 stft_loss_params:
-    fft_sizes: [1024, 2048, 512]  # List of FFT size for STFT-based loss.
-    hop_sizes: [120, 240, 50]     # List of hop size for STFT-based loss
-    win_lengths: [600, 1200, 240] # List of window length for STFT-based loss.
-    window: "hann_window"         # Window function for STFT-based loss
+  fft_sizes: [1024, 2048, 512] # List of FFT size for STFT-based loss.
+  hop_sizes: [120, 240, 50] # List of hop size for STFT-based loss
+  win_lengths: [600, 1200, 240] # List of window length for STFT-based loss.
+  window: 'hann_window' # Window function for STFT-based loss
 subband_stft_loss_params:
-  fft_sizes: [384, 683, 171]  # List of FFT size for STFT-based loss.
-  hop_sizes: [30, 60, 10]     # List of hop size for STFT-based loss
+  fft_sizes: [384, 683, 171] # List of FFT size for STFT-based loss.
+  hop_sizes: [30, 60, 10] # List of hop size for STFT-based loss
   win_lengths: [150, 300, 60] # List of window length for STFT-based loss.
-  window: "hann_window"       # Window function for STFT-based loss
+  window: 'hann_window' # Window function for STFT-based loss
 ---
 log:
   summary_interval: 1
   validation_interval: 5
   save_interval: 20
-  chkpt_dir: 'chkpt'
-  log_dir: 'logs'

@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import torch
 import tqdm
 from scipy.io.wavfile import write
 
-from utils.plotting import get_files
+from .utils import read_mel_np
 
 MAX_WAV_VALUE = 32768.0
 
@@ -79,11 +81,10 @@ def validate(
         step,
     )
     if hp.data.eval_path is not None:
-        mel_filename = get_files(hp.data.eval_path, extension=".npy")
+        mel_filename = Path(hp.data.eval_path).read_text().splitlines()
         for j in range(0, len(mel_filename)):
             with torch.no_grad():
-                mel = torch.from_numpy(np.load(mel_filename[j]))
-                out_path = mel_filename[j].replace(".npy", f"{step}.wav")
+                mel = torch.from_numpy(read_mel_np(mel_filename[j]))
                 mel_name = mel_filename[j].split("/")[-1].split(".")[0]
                 if len(mel.shape) == 2:
                     mel = mel.unsqueeze(0)
@@ -97,7 +98,8 @@ def validate(
                 gen_audio = gen_audio.short()
                 gen_audio = gen_audio.cpu().detach().numpy()
 
-                write(out_path, hp.audio.sampling_rate, gen_audio)
+                # out_path = mel_filename[j].replace(".npy", f"{step}.wav")
+                # write(out_path, hp.audio.sampling_rate, gen_audio)
 
     # add evalution code here
 

@@ -1,8 +1,9 @@
 import random
 import subprocess
+from pathlib import Path
 
 import numpy as np
-from scipy.io.wavfile import read
+from librosa.core import load
 
 
 def weights_init(m):
@@ -19,19 +20,17 @@ def get_commit_hash():
     return message.strip().decode("utf-8")
 
 
-def read_wav_np(path):
-    sr, wav = read(path)
+def read_wav_np(path: Path, sampling_rate=None):
+    if path.suffix != ".npy":
+        data, sampling_rate = load(path, sr=sampling_rate)
+    else:
+        a = np.load(path, allow_pickle=True).item()
+        assert sampling_rate == a["rate"]
+        data = a["array"]
+    return sampling_rate, data
 
-    if len(wav.shape) == 2:
-        wav = wav[:, 0]
 
-    if wav.dtype == np.int16:
-        wav = wav / 32768.0
-    elif wav.dtype == np.int32:
-        wav = wav / 2147483648.0
-    elif wav.dtype == np.uint8:
-        wav = (wav - 128) / 128.0
-
-    wav = wav.astype(np.float32)
-
-    return sr, wav
+def read_mel_np(path: Path):
+    a = np.load(path, allow_pickle=True).item()
+    data = a["array"].T
+    return data
